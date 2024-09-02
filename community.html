@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .chat-container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    .messages {
+      height: 300px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+    }
+    .message {
+      margin-bottom: 10px;
+    }
+    .message p {
+      margin: 0;
+    }
+    .message span {
+      font-size: 0.8em;
+      color: #555;
+    }
+    form {
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="messages" id="messages"></div>
+    <form id="chatForm">
+      <input type="text" id="messageInput" placeholder="Type a message..." required>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js"></script>
+
+  <script type="module">
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyD0ohfy9u-CDt9K7ZDX-UUbzNCbCRhL7TY",
+      authDomain: "credentials-a17e3.firebaseapp.com",
+      projectId: "credentials-a17e3",
+      storageBucket: "credentials-a17e3.appspot.com",
+      messagingSenderId: "968049262137",
+      appId: "1:968049262137:web:06929729e6c9ca91bcd7e8",
+      measurementId: "G-9VPPGVQN5L"
+    };
+
+    // Initialize Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Get references to DOM elements
+    const messagesDiv = document.getElementById('messages');
+    const chatForm = document.getElementById('chatForm');
+    const messageInput = document.getElementById('messageInput');
+
+    // Handle form submission
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const messageText = messageInput.value;
+      if (messageText.trim()) {
+        try {
+          await addDoc(collection(db, 'messages'), {
+            text: messageText,
+            timestamp: new Date()
+          });
+          messageInput.value = '';
+        } catch (e) {
+          alert('Error sending message: ' + e.message);
+        }
+      }
+    });
+
+    // Load messages in real-time
+    const q = query(collection(db, 'messages'), orderBy('timestamp'));
+    onSnapshot(q, (querySnapshot) => {
+      messagesDiv.innerHTML = '';
+      querySnapshot.forEach((doc) => {
+        const message = doc.data();
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        messageElement.innerHTML = `
+          <p>${message.text}</p>
+          <span>${new Date(message.timestamp.seconds * 1000).toLocaleTimeString()}</span>
+        `;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to the bottom
+      });
+    });
+  </script>
+</body>
+</html>
